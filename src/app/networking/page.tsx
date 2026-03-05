@@ -6,7 +6,7 @@ export default function NetworkingPage() {
             <div>
                 <h1 className="text-3xl font-bold tracking-tight">Post-Application Connect</h1>
                 <p className="text-muted-foreground mt-2 text-lg">
-                    Our AI scans for high-value connections at companies you've applied to.
+                    Our AI scans for high-value connections at companies you&apos;ve applied to.
                 </p>
             </div>
 

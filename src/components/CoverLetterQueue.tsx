@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Check, X, RefreshCw, FileText, Send, Loader2 } from "lucide-react"
+import { Check, X, RefreshCw, FileText, Loader2 } from "lucide-react"
 import { generateCoverLetter } from "@/actions/generateCoverLetter"
 
 type AppStatus = "pending" | "generating" | "queued";
@@ -21,13 +21,6 @@ export function CoverLetterQueue() {
     const currentApp = apps[currentIndex]
 
     useEffect(() => {
-        // If we land on a queued app, shift it to generating, then fetch
-        if (currentApp && currentApp.status === "queued") {
-            setApps(prev => prev.map((a, i) => i === currentIndex ? { ...a, status: "generating" } : a))
-        }
-    }, [currentIndex, currentApp])
-
-    useEffect(() => {
         async function fetchLetter() {
             if (currentApp && currentApp.status === "generating" && !currentApp.letter) {
                 const result = await generateCoverLetter(currentApp.company, currentApp.role) // hit LLM route
@@ -37,17 +30,33 @@ export function CoverLetterQueue() {
         fetchLetter()
     }, [currentApp, currentIndex])
 
+    const setCurrentAppStatus = (status: AppStatus, letter = "") => {
+        setApps(prev => prev.map((app, index) => index === currentIndex ? { ...app, status, letter } : app))
+    }
+
+    const prepareAppAtIndex = (index: number) => {
+        setApps(prev => prev.map((app, current) => {
+            if (current !== index || app.status !== "queued") {
+                return app
+            }
+
+            return { ...app, status: "generating" }
+        }))
+    }
+
     const handleNext = () => {
         if (currentIndex < apps.length - 1) {
-            setCurrentIndex(currentIndex + 1)
+            const nextIndex = currentIndex + 1
+            prepareAppAtIndex(nextIndex)
+            setCurrentIndex(nextIndex)
         }
     }
 
     const handleRegenerate = async () => {
         if (!currentApp) return;
-        setApps(prev => prev.map((a, i) => i === currentIndex ? { ...a, status: "generating", letter: "" } : a))
+        setCurrentAppStatus("generating")
         const result = await generateCoverLetter(currentApp.company, currentApp.role)
-        setApps(prev => prev.map((a, i) => i === currentIndex ? { ...a, status: "pending", letter: result } : a))
+        setCurrentAppStatus("pending", result)
     }
 
     const handleApprove = () => {
