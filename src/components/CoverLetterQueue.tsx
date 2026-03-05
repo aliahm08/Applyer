@@ -1,24 +1,53 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Check, X, RefreshCw, FileText, Send, Loader2 } from "lucide-react"
+import { generateCoverLetter } from "@/actions/generateCoverLetter"
 
-const mockApplications = [
+type AppStatus = "pending" | "generating" | "queued";
+type Application = { id: number, company: string, role: string, status: AppStatus, letter: string };
+
+const mockApplicationsBase: Application[] = [
     { id: 1, company: "Palantir", role: "Forward Deployed Engineer", status: "pending", letter: "Dear Hiring Team at Palantir...\n\nI am writing to express my strong interest in the Forward Deployed Engineer position. With a robust background in building scalable AI systems and deploying them in high-stakes environments, I am eager to bring my expertise to Palantir's mission-critical platforms." },
-    { id: 2, company: "Anthropic", role: "AI Full Stack Developer", status: "generating", letter: "" },
+    { id: 2, company: "Anthropic", role: "AI Full Stack Developer", status: "queued", letter: "" },
     { id: 3, company: "OpenAI", role: "Software Engineer, Machine Learning", status: "queued", letter: "" },
 ]
 
 export function CoverLetterQueue() {
+    const [apps, setApps] = useState<Application[]>(mockApplicationsBase)
     const [currentIndex, setCurrentIndex] = useState(0)
-    const currentApp = mockApplications[currentIndex]
+    const currentApp = apps[currentIndex]
+
+    useEffect(() => {
+        // If we land on a queued app, shift it to generating, then fetch
+        if (currentApp && currentApp.status === "queued") {
+            setApps(prev => prev.map((a, i) => i === currentIndex ? { ...a, status: "generating" } : a))
+        }
+    }, [currentIndex, currentApp])
+
+    useEffect(() => {
+        async function fetchLetter() {
+            if (currentApp && currentApp.status === "generating" && !currentApp.letter) {
+                const result = await generateCoverLetter(currentApp.company, currentApp.role) // hit LLM route
+                setApps(prev => prev.map((a, i) => i === currentIndex ? { ...a, status: "pending", letter: result } : a))
+            }
+        }
+        fetchLetter()
+    }, [currentApp, currentIndex])
 
     const handleNext = () => {
-        if (currentIndex < mockApplications.length - 1) {
+        if (currentIndex < apps.length - 1) {
             setCurrentIndex(currentIndex + 1)
         }
+    }
+
+    const handleRegenerate = async () => {
+        if (!currentApp) return;
+        setApps(prev => prev.map((a, i) => i === currentIndex ? { ...a, status: "generating", letter: "" } : a))
+        const result = await generateCoverLetter(currentApp.company, currentApp.role)
+        setApps(prev => prev.map((a, i) => i === currentIndex ? { ...a, status: "pending", letter: result } : a))
     }
 
     const handleApprove = () => {
@@ -38,7 +67,7 @@ export function CoverLetterQueue() {
                     </p>
                 </div>
                 <div className="text-sm font-medium text-muted-foreground bg-secondary px-3 py-1.5 rounded-full border border-border">
-                    {currentIndex + 1} of {mockApplications.length} Remaining
+                    {currentIndex + 1} of {apps.length} Remaining
                 </div>
             </div>
 
@@ -96,13 +125,13 @@ export function CoverLetterQueue() {
                 </CardContent>
 
                 <CardFooter className="border-t border-border/50 p-6 flex justify-between bg-muted/10 relative z-10">
-                    <Button variant="outline" className="gap-2 text-muted-foreground hover:text-destructive hover:border-destructive">
+                    <Button variant="outline" onClick={handleNext} className="gap-2 text-muted-foreground hover:text-destructive hover:border-destructive">
                         <X className="h-4 w-4" />
                         Skip Job
                     </Button>
 
                     <div className="flex gap-3">
-                        <Button variant="outline" disabled={currentApp.status !== "pending"} className="gap-2 group">
+                        <Button variant="outline" onClick={handleRegenerate} disabled={currentApp.status !== "pending"} className="gap-2 group">
                             <RefreshCw className="h-4 w-4 group-hover:rotate-180 transition-transform duration-500" />
                             Regenerate
                         </Button>
@@ -120,7 +149,7 @@ export function CoverLetterQueue() {
 
             {/* Progress timeline */}
             <div className="flex gap-2 mt-4">
-                {mockApplications.map((app, idx) => (
+                {apps.map((app, idx) => (
                     <div
                         key={app.id}
                         className={`h-1.5 flex-1 rounded-full transition-colors ${idx < currentIndex ? 'bg-primary' :
