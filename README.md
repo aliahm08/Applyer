@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<div align="center">
+  <img src="public/window.svg" alt="Applyer Logo" width="80" height="80" />
+  <h1 align="center">applyer</h1>
+  <p align="center">
+    <strong>AI-powered job board scrubbing, batch applications, and automated networking.</strong>
+  </p>
+</div>
+
+<hr />
+
+## Overview
+
+**applyer** is a Next.js (App Router) web application built to completely automate and streamline the modern job application process. Moving beyond simplistic scrapers, it acts as a comprehensive pipeline—taking in base resumes, scrubbing various job platforms for roles, batch-scheduling applications using LLM-generated custom cover letters, and finally discovering key networking contacts at the companies applied to.
+
+## Core Features
+
+### 1. Resume Management
+- **Upload & Versioning**: Drag and drop PDF resumes into the local vault.
+- **Active Selection**: Toggle which resume the AI models should use as the "Base Source of Truth" when crafting cover letters.
+
+### 2. Job Board Scrubber
+- **Multi-Source Aggregation**: Search across multiple platforms (LinkedIn, Greenhouse, Lever, etc.) from a single unified dashboard.
+- **Batch Selection**: Select multiple curated jobs and send them to the AI pipeline in a single click.
+
+### 3. AI Cover Letter Agent
+- **Automated Drafting**: Cycles through your batched jobs and generates highly-tailored cover letters by cross-referencing the Active Resume with the scraped job descriptions.
+- **Approval Flow**: An integrated queue viewer allowing you to review, regenerate, or approve and submit the generated applications seamlessly.
+
+### 4. Post-Application Networking Agent
+- **Target Discovery**: Automatically surfaces high-value individuals (Recruiters, Hiring Managers, Senior Engineers) at the companies you've just applied to.
+- **Actionable Outreach**: Directly launch Email, Phone calls, LinkedIn DMs, or generate an AI-drafted introduction message based on matching criteria.
+
+## Tech Stack
+
+- **Framework**: Next.js 15 (React 19)
+- **Styling**: Tailwind CSS v4 (Custom stark dark-mode theme)
+- **Icons**: Lucide React
+- **Language**: TypeScript
 
 ## Getting Started
 
-First, run the development server:
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/aliahm08/Applyer.git
+   cd Applyer
+   ```
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+3. **Run the development server:**
+   ```bash
+   npm run dev
+   ```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+4. **Open your browser:**
+   Navigate to [http://localhost:3000](http://localhost:3000) to view the application mockups.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+*Note: The current repository state reflects the core frontend mockups and React architectures. Backend database configurations and live LLM endpoints are slated for the next phase of development.*
