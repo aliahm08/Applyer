@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { AuthStatus } from "@/components/auth-status"
 import { Briefcase, FileText, Send, Users } from "lucide-react"
 
 const navigation = [
@@ -54,15 +55,7 @@ export function Sidebar() {
             </div>
 
             <div className="p-4 border-t border-border">
-                <div className="flex items-center gap-3 px-2">
-                    <div className="h-8 w-8 rounded-full bg-secondary border border-border flex items-center justify-center text-xs font-semibold">
-                        AA
-                    </div>
-                    <div className="flex flex-col">
-                        <span className="text-sm font-medium">User Profile</span>
-                        <span className="text-xs text-muted-foreground">Pro Plan</span>
-                    </div>
-                </div>
+                <AuthStatus />
             </div>
         </div>
     )

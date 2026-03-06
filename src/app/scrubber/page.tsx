@@ -6,7 +6,7 @@ export default function ScrubberPage() {
             <div>
                 <h1 className="text-3xl font-bold tracking-tight">Job Scrubber</h1>
                 <p className="text-muted-foreground mt-2 text-lg">
-                    Search across multiple job boards simultaneously and queue them for batch application.
+                    Search the live jobs feed, review results, and queue them for batch application.
                 </p>
             </div>
 
