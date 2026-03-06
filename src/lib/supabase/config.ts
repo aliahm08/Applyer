@@ -12,7 +12,7 @@ function readEnv(...names: string[]) {
 }
 
 export function getSupabaseUrl() {
-  return readEnv("SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_URL") ?? DEFAULT_SUPABASE_URL
+  return (process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || readEnv("SUPABASE_URL")) ?? DEFAULT_SUPABASE_URL
 }
 
 export function getSupabasePublishableKey() {
@@ -25,7 +25,7 @@ export function getSupabasePublishableKey() {
 }
 
 export function getOptionalSupabasePublishableKey() {
-  return readEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "NEXT_PUBLIC_SUPABASE_ANON_KEY")
+  return process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim() || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() || null
 }
 
 export function getSupabaseSecretKey() {
