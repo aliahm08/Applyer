@@ -17,6 +17,7 @@ type Job = {
   excerpt: string
   jobUrl: string
   description: string
+  score?: number
 }
 
 function formatRelativeTime(isoDate: string) {
@@ -38,8 +39,10 @@ export function JobScrubber() {
   const [isQueueing, setIsQueueing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [syncMessage, setSyncMessage] = useState<string | null>(null)
+  const [hideUnrated, setHideUnrated] = useState(false)
 
   const selectedRows = useMemo(() => jobs.filter((job) => selectedJobs.includes(job.id)), [jobs, selectedJobs])
+  const displayedJobs = useMemo(() => jobs.filter(job => !hideUnrated || job.score !== undefined), [jobs, hideUnrated])
 
   const loadJobs = async () => {
     setIsSearching(true)
@@ -61,7 +64,29 @@ export function JobScrubber() {
       }
 
       const data = (await response.json()) as { jobs: Job[] }
-      setJobs(data.jobs)
+      
+      let allJobs = data.jobs
+      
+      try {
+          const mwRes = await fetch(`/api/jobs/search/moveworks`)
+          if (mwRes.ok) {
+              const mwData = await mwRes.json()
+              const mwJobs = mwData.jobs || []
+              // Filter by query/location if provided
+              const mwFiltered = mwJobs.filter((job: any) => {
+                  const q = query.toLowerCase()
+                  const l = location.toLowerCase()
+                  const qMatch = !q || job.title.toLowerCase().includes(q) || job.description.toLowerCase().includes(q)
+                  const lMatch = !l || job.location.toLowerCase().includes(l)
+                  return qMatch && lMatch
+              })
+              allJobs = [...allJobs, ...mwFiltered]
+          }
+      } catch (e) {
+          console.error("Failed to load Moveworks jobs:", e)
+      }
+
+      setJobs(allJobs)
       setSelectedJobs([])
     } catch (searchError) {
       setError(searchError instanceof Error ? searchError.message : "Failed to search jobs")
@@ -82,10 +107,10 @@ export function JobScrubber() {
   }
 
   const toggleAll = () => {
-    if (selectedJobs.length === jobs.length) {
+    if (selectedJobs.length === displayedJobs.length) {
       setSelectedJobs([])
     } else {
-      setSelectedJobs(jobs.map((job) => job.id))
+      setSelectedJobs(displayedJobs.map((job) => job.id))
     }
   }
 
@@ -139,6 +164,10 @@ export function JobScrubber() {
             <CardDescription>Search the live remote jobs feed and queue roles into Supabase.</CardDescription>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="gap-2 border-primary text-primary">
+              <Globe className="h-4 w-4" />
+              Moveworks Ranked
+            </Button>
             <Button variant="outline" size="sm" className="gap-2">
               <Globe className="h-4 w-4" />
               Himalayas API
@@ -156,7 +185,17 @@ export function JobScrubber() {
             {isSearching ? "Scrubbing..." : "Search"}
           </Button>
         </div>
-        <p className="text-xs text-muted-foreground mt-2">Live remote job data is pulled from the latest Himalayas feed and filtered in-app.</p>
+        <div className="flex justify-between items-center mt-3">
+            <p className="text-xs text-muted-foreground">Live remote job data is pulled from the latest Himalayas feed and filtered in-app.</p>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setHideUnrated(!hideUnrated)}
+              className={`text-xs ${hideUnrated ? "text-primary" : "text-muted-foreground"}`}
+            >
+              {hideUnrated ? "Show Unrated Jobs" : "Hide Unrated Jobs"}
+            </Button>
+        </div>
       </CardHeader>
 
       <CardContent className="flex-1 overflow-y-auto">
@@ -164,18 +203,19 @@ export function JobScrubber() {
         <div className="rounded-md border border-border">
           <div className="flex items-center p-4 bg-muted/50 border-b border-border">
             <button onClick={toggleAll} className="mr-4 text-muted-foreground hover:text-white transition-colors">
-              {jobs.length > 0 && selectedJobs.length === jobs.length ? <CheckSquare className="h-5 w-5" /> : <Square className="h-5 w-5" />}
+              {displayedJobs.length > 0 && selectedJobs.length === displayedJobs.length ? <CheckSquare className="h-5 w-5" /> : <Square className="h-5 w-5" />}
             </button>
             <div className="flex-1 grid grid-cols-12 gap-4 text-sm font-medium text-muted-foreground">
               <div className="col-span-5">Job Title</div>
-              <div className="col-span-3">Company</div>
+              <div className="col-span-1 text-center">Score</div>
+              <div className="col-span-2">Company</div>
               <div className="col-span-2">Location</div>
               <div className="col-span-2">Source</div>
             </div>
           </div>
 
           <div className="divide-y divide-border">
-            {jobs.map((job) => {
+            {displayedJobs.map((job) => {
               const isSelected = selectedJobs.includes(job.id)
               return (
                 <div key={job.id} className={`flex items-center p-4 transition-colors hover:bg-accent/50 ${isSelected ? "bg-primary/5" : ""}`}>
@@ -184,7 +224,10 @@ export function JobScrubber() {
                   </button>
                   <div className="flex-1 grid grid-cols-12 gap-4 text-sm items-center">
                     <div className="col-span-5 font-medium">{job.title}</div>
-                    <div className="col-span-3 flex items-center gap-2 text-muted-foreground">
+                    <div className="col-span-1 text-center font-bold text-primary">
+                        {job.score !== undefined ? `${job.score}%` : '-'}
+                    </div>
+                    <div className="col-span-2 flex items-center gap-2 text-muted-foreground">
                       <Building2 className="h-3 w-3" />
                       {job.company}
                     </div>
@@ -208,7 +251,7 @@ export function JobScrubber() {
                 </div>
               )
             })}
-            {!isSearching && jobs.length === 0 && (
+            {!isSearching && displayedJobs.length === 0 && (
               <div className="p-6 text-sm text-muted-foreground">No jobs matched your current filters.</div>
             )}
           </div>
